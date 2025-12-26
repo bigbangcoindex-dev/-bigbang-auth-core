@@ -394,7 +394,6 @@ function _validateSecret(bytes32 secret) internal pure {
     // Domain-prefixed, project-bound, time-bound OTP
     return keccak256(
         abi.encodePacked(
-            "key:",
             identityHash,
             manager,
             timeIndex
@@ -429,7 +428,6 @@ function _validateSecret(bytes32 secret) internal pure {
 
     bytes32 expectedKey = keccak256(
         abi.encodePacked(
-            "key:",
             identityHash,
             manager,
             timeIndex
@@ -438,5 +436,6 @@ function _validateSecret(bytes32 secret) internal pure {
 
     return providedKey == expectedKey;
 }
+
 
 }
