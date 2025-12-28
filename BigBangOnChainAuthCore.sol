@@ -62,25 +62,7 @@ abstract contract BigBangOnChainAuthCore {
                                 EVENTS
     //////////////////////////////////////////////////////////////*/
 
-    /**
-     * @notice Emitted when a new manager is registered
-     */
-    event ManagerRegistered(address indexed manager, string message);
-
-    /**
-     * @notice Emitted when a manager is deactivated
-     */
-    event ManagerDeactivated(address indexed manager, string message);
-
-    /**
-     * @notice Emitted when a new user identity is registered
-     */
-    event UserRegistered(
-        address indexed manager,
-        address indexed wallet,
-        bytes32 identityHash,
-        string username
-    );
+   
     /// @notice Emitted when manager registration fee is updated by Root
 /// @param root The root address who applied the change
 /// @param oldFee Previous manager registration fee
@@ -90,12 +72,6 @@ abstract contract BigBangOnChainAuthCore {
       uint256 oldFee,
       uint256 newFee
    );
-
-
-    /**
-     * @notice Emitted when a manager updates the proof window duration
-     */
-    event ProofWindowUpdated(address indexed manager, uint256 windowSeconds);
 
     /*//////////////////////////////////////////////////////////////
                             STATE VARIABLES
@@ -235,8 +211,6 @@ abstract contract BigBangOnChainAuthCore {
     });
 
     totalAccounts += 1;
-
-    emit ManagerRegistered(msg.sender, "Created");
 }
 /**
  * @dev Validates minimum entropy requirements for a manager secret.
@@ -277,7 +251,6 @@ function _validateSecret(bytes32 secret) internal pure {
     function selfDeactivate() public onlyActiveManager {
         managers[msg.sender].isActive = false;
         totalAccounts -= 1;
-        emit ManagerDeactivated(msg.sender, "It has been dissolved.");
     }
 
     /**
@@ -285,10 +258,9 @@ function _validateSecret(bytes32 secret) internal pure {
      * @param windowSeconds Length of the proof window in seconds
      */
     function setProofWindow(uint256 windowSeconds) public onlyActiveManager {
-        require(windowSeconds >= 1 hours, "WINDOW_TOO_SHORT");
+        require(windowSeconds >= 60 seconds, "WINDOW_TOO_SHORT"); // min: 1 minute
         require(windowSeconds <= 7 days, "WINDOW_TOO_LONG");
         managers[msg.sender].proofWindowSeconds = windowSeconds;
-        emit ProofWindowUpdated(msg.sender, windowSeconds);
     }
 
     /**
@@ -315,8 +287,8 @@ function _validateSecret(bytes32 secret) internal pure {
         address manager,
         address wallet,
         string calldata username
-    ) public {
-
+    ) public (
+        require(wallet == msg.sender,"Invalid wallet address");
         require(managers[manager].isActive, "MANAGER_INACTIVE");
         require(!usernameUsed[manager][username], "USERNAME_USED");
         require(!walletUsed[manager][wallet], "WALLET_USED");
@@ -341,7 +313,6 @@ function _validateSecret(bytes32 secret) internal pure {
         walletUsed[manager][wallet] = true;
 
         totalAccounts += 1;
-        emit UserRegistered(manager, wallet, identityHash, username);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -439,3 +410,4 @@ function _validateSecret(bytes32 secret) internal pure {
 
 
 }
+
